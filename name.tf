@@ -4,5 +4,6 @@ locals {
   group-regex_compliant = replace(lower(var.group), local.mssql_regex, "")
   project-regex_compliant = replace(lower(var.project), local.mssql_regex, "")
   mssql-userDefinedString-regex_compliant = replace(lower(var.userDefinedString), local.mssql_regex, "")
-  mssql_server_name = substr("${local.env-regex_compliant_4}-${local.group-regex_compliant}-${local.project-regex_compliant}-${local.mssql-userDefinedString-regex_compliant}", 0, 63)
+  mssql_prefix = "${local.env-regex_compliant_4}-${local.group-regex_compliant}-${local.project-regex_compliant}"
+  mssql_server_name = substr("${local.mssql_prefix}-${local.mssql-userDefinedString-regex_compliant}", 0, 63)
 }
