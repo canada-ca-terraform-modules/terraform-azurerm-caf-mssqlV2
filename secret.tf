@@ -6,12 +6,13 @@ locals {
 }
 
 data "azurerm_key_vault" "key_vault" {
+  count = try(var.mssql.password_overwrite, false) ? 0 : 1
   name = local.kv_name
   resource_group_name = var.resource_groups["Keyvault"].name
 }
 
 resource "random_password" "sql-admin-password" {
-  count            = try(data.azurerm_key_vault.key_vault.enable_rbac_authorization, false) && !try(var.mssql.azuread_administrator.azuread_authentication_only, false) ? 1 : 0
+  count            = try(data.azurerm_key_vault.key_vault[0].enable_rbac_authorization, false) && !try(var.mssql.azuread_administrator.azuread_authentication_only, false) && !try(var.mssql.password_overwrite, false) ? 1 : 0
   length           = 16
   special          = true
   override_special = "!#$%&*"
@@ -26,10 +27,10 @@ resource "random_password" "sql-admin-password" {
 }
 
 resource "azurerm_key_vault_secret" "sql-admin-password" {
-  count        = try(data.azurerm_key_vault.key_vault.enable_rbac_authorization, false) && !try(var.mssql.azuread_administrator.azuread_authentication_only, false) ? 1 : 0
+  count        = try(data.azurerm_key_vault.key_vault[0].enable_rbac_authorization, false) && !try(var.mssql.azuread_administrator.azuread_authentication_only, false) && !try(var.mssql.password_overwrite, false) ? 1 : 0
   name         = "${local.mssql_server_name}-sql-admin-password"
   value        = random_password.sql-admin-password[0].result
-  key_vault_id = data.azurerm_key_vault.key_vault.id
+  key_vault_id = data.azurerm_key_vault.key_vault[0].id
 
   lifecycle {
     ignore_changes = all

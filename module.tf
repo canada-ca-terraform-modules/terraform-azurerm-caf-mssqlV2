@@ -43,7 +43,7 @@ resource "azurerm_mssql_database" "mssql_db" {
   name      = "${local.mssql_prefix}-${each.key}"
   server_id = azurerm_mssql_server.mssql_sever.id
 
-  auto_pause_delay_in_minutes                                = try(each.value.auto_pause_delay_in_minutes, -1)
+  auto_pause_delay_in_minutes                                = try(each.value.auto_pause_delay_in_minutes, null)
   create_mode                                                = try(each.value.create_mode, "Default")
   creation_source_database_id                                = try(each.value.creation_source_database_id, null)
   collation                                                  = try(each.value.collation, null)
@@ -64,35 +64,52 @@ resource "azurerm_mssql_database" "mssql_db" {
   sample_name                                                = try(each.value.sample_name, null)
   sku_name                                                   = try(each.value.sku_name, "Basic")
   storage_account_type                                       = try(each.value.storage_account_type, "Geo")
-  transparent_data_encryption_enabled                        = try(each.value.transparent_data_encryption_enabled, true)
-  transparent_data_encryption_key_automatic_rotation_enabled = try(each.value.transparent_data_encryption_key_automatic_rotation_enabled, false)
+  transparent_data_encryption_enabled                        = try(each.value.transparent_data_encryption_enabled, null)
+  transparent_data_encryption_key_automatic_rotation_enabled = try(each.value.transparent_data_encryption_key_automatic_rotation_enabled, null)
+  transparent_data_encryption_key_vault_key_id               = try(each.value.transparent_data_encryption_key_vault_key_id, null)
   zone_redundant                                             = try(each.value.zone_redundant, null)
-  secondary_type                                             = try(each.value.secondary_type, "Geo")
+  secondary_type                                             = try(each.value.secondary_type, null)
 
   tags = merge(var.tags, try(each.value.tags, {}))
 
   dynamic "import" {
-    for_each = try(each.value.import, false) != false ? [1] : [0]
+    for_each = try(each.value.import, false) != false ? [1] : []
     content {
-      storage_uri = each.value.import.storage_uri
-      storage_key = each.value.import.storage_key
-      storage_key_type = each.value.import.storage_key_type
-      administrator_login = each.value.import.administrator_login
+      storage_uri                  = each.value.import.storage_uri
+      storage_key                  = each.value.import.storage_key
+      storage_key_type             = each.value.import.storage_key_type
+      administrator_login          = each.value.import.administrator_login
       administrator_login_password = each.value.import.administrator_login_password
-      authentication_type = each.value.import.authentication_type
-      storage_account_id = try(each.value.import.storage_account_id, null)
+      authentication_type          = each.value.import.authentication_type
+      storage_account_id           = try(each.value.import.storage_account_id, null)
+    }
+  }
+
+  dynamic "short_term_retention_policy" {
+    for_each = try(each.value.short_term_retention_policy, false) != false ? [1] : []
+    content {
+      retention_days = each.value.short_term_retention_policy.retention_days
+      backup_interval_in_hours = try(each.value.short_term_retention_policy.backup_interval_in_hours, 12)
+    }
+  } 
+
+  dynamic "long_term_retention_policy" {
+    for_each = try(each.value.long_term_retention_policy, false) != false ? [1] : []
+    content {
+      weekly_retention = try(each.value.long_term_retention_policy.weekly_retention, "P1Y")
+      monthly_retention = try(each.value.long_term_retention_policy.monthly_retention, "P1Y")
+      yearly_retention = try(each.value.long_term_retention_policy.yearly_retention, "P1Y")
+      week_of_year = try(each.value.long_term_retention_policy.week_of_year, 1)
+      immutable_backups_enabled = try(each.value.long_term_retention_policy.immutable_backups_enabled, false)
     }
   }
 
 
   lifecycle {
-    ignore_changes = [tags, ]
+    ignore_changes  = [tags, ]
+    # prevent_destroy = true
   }
-
-
 }
-
-
 
 resource "azurerm_mssql_firewall_rule" "firewall_rules" {
   for_each = try(var.mssql.firewall_rules, {})
@@ -102,6 +119,24 @@ resource "azurerm_mssql_firewall_rule" "firewall_rules" {
   start_ip_address = each.value.start_ip_address
   end_ip_address   = each.value.end_ip_address
 }
+
+# resource "azurerm_mssql_virtual_network_rule" "test" {
+#   ignore_missing_vnet_service_endpoint = false
+#   name = "test"
+#   server_id = azurerm_mssql_server.mssql_sever.id
+#   subnet_id = var.subnets.OZ.id
+# }
+
+resource "azurerm_mssql_server_extended_auditing_policy" "mssql_server_audit_policy" {
+  server_id = azurerm_mssql_server.mssql_sever.id
+  enabled = try(var.mssql.extended_auditing_policy.enabled, true)
+  storage_endpoint = module.storage_account.storage-account-object.primary_blob_endpoint
+  storage_account_access_key = module.storage_account.storage-account-object.primary_access_key
+  storage_account_access_key_is_secondary = false
+  retention_in_days = try(var.mssql.extended_auditing_policy.retention_in_days, 6)
+  log_monitoring_enabled = try(var.mssql.extended_auditing_policy.log_monitoring_enabled, true)
+}
+
 
 
 # Calls this module if we need a private endpoint attached to the storage account
