@@ -12,6 +12,7 @@ resource "azurerm_mssql_server" "mssql_sever" {
   public_network_access_enabled        = try(var.mssql.public_network_access_enabled, false)
   outbound_network_restriction_enabled = try(var.mssql.outbound_network_restriction_enabled, false)
 
+  # azuread_administrator is optional
   dynamic "azuread_administrator" {
     for_each = try(var.mssql.azuread_administrator, false) != false ? [1] : []
     content {
@@ -40,9 +41,11 @@ resource "azurerm_mssql_server" "mssql_sever" {
 resource "azurerm_mssql_database" "mssql_db" {
   for_each = try(var.mssql.database, {})
 
+  # Required
   name      = "${local.mssql_prefix}-${each.key}"
   server_id = azurerm_mssql_server.mssql_sever.id
 
+  # Optional
   auto_pause_delay_in_minutes                                = try(each.value.auto_pause_delay_in_minutes, null)
   create_mode                                                = try(each.value.create_mode, "Default")
   creation_source_database_id                                = try(each.value.creation_source_database_id, null)
@@ -107,10 +110,10 @@ resource "azurerm_mssql_database" "mssql_db" {
 
   lifecycle {
     ignore_changes = [tags, ]
-    # prevent_destroy = true
   }
 }
 
+# Sets firewal rules for the server. Not applicable if public_network_access_enabled is false
 resource "azurerm_mssql_firewall_rule" "firewall_rules" {
   for_each = try(var.mssql.firewall_rules, {})
 
@@ -120,6 +123,7 @@ resource "azurerm_mssql_firewall_rule" "firewall_rules" {
   end_ip_address   = each.value.end_ip_address
 }
 
+# Sets network rules for the server. Not applicable if public_network_access_enabled is false
 resource "azurerm_mssql_virtual_network_rule" "test" {
   for_each = try(var.mssql.virtual_network_rules, {})
 
@@ -129,17 +133,29 @@ resource "azurerm_mssql_virtual_network_rule" "test" {
   ignore_missing_vnet_service_endpoint = try(each.value.ignore_missing_vnet_service_endpoint, false)
 }
 
-# resource "azurerm_mssql_server_extended_auditing_policy" "mssql_server_audit_policy" {
-#   server_id                               = azurerm_mssql_server.mssql_sever.id
-#   enabled                                 = try(var.mssql.extended_auditing_policy.enabled, true)
-#   storage_endpoint                        = module.storage_account.storage-account-object.primary_blob_endpoint
-#   storage_account_access_key              = module.storage_account.storage-account-object.primary_access_key
-#   storage_account_access_key_is_secondary = false
-#   retention_in_days                       = try(var.mssql.extended_auditing_policy.retention_in_days, 6)
-#   log_monitoring_enabled                  = try(var.mssql.extended_auditing_policy.log_monitoring_enabled, true)
-# }
+resource "azurerm_mssql_server_extended_auditing_policy" "mssql_server_audit_policy" {
+  count = try(var.mssql.auditing_policy_enabled, true) ? 1 : 0
+  server_id                               = azurerm_mssql_server.mssql_sever.id
+  enabled                                 = try(var.mssql.extended_auditing_policy.enabled, true)
+  storage_endpoint                        = try(var.mssql.extended_auditing_policy.storage_endpoint, false) != false ? var.mssql.extended_auditing_policy.storage_endpoint : module.storage_account[0].storage-account-object.primary_blob_endpoint
+  storage_account_access_key              = try(var.mssql.extended_auditing_policy.storage_account_access_key, false) != false ? var.mssql.extended_auditing_policy.storage_account_access_key : null
+  storage_account_access_key_is_secondary = try(var.mssql.extended_auditing_policy.storage_account_access_key_is_secondary, false)
+  retention_in_days                       = try(var.mssql.extended_auditing_policy.retention_in_days, 6)
+  log_monitoring_enabled                  = try(var.mssql.extended_auditing_policy.log_monitoring_enabled, true)
+}
 
-
+resource "azurerm_mssql_server_security_alert_policy" "mssql_server_security_alert_policy" {
+  count = try(var.mssql.server_security_alert_policy_enabled, false) ? 1 : 0
+  resource_group_name = local.resource_group_name
+  server_name = azurerm_mssql_server.mssql_sever.name
+  state = try(var.mssql.server_security_alert_policy.state, "Enabled")
+  email_account_admins = try(var.mssql.server_security_alert_policy.email_account_admins, false)
+  email_addresses = try(var.mssql.server_security_alert_policy.email_addresses, null)
+  retention_days = try(var.mssql.server_security_alert_policy.retention_days, 30)
+  storage_endpoint = module.storage_account[0].storage-account-object.primary_blob_endpoint
+  storage_account_access_key = module.storage_account[0].storage-account-object.primary_access_key
+  disabled_alerts = try(var.mssql.server_security_alert_policy.disabled_alerts, ["Data_Exfiltration"])
+}
 
 # Calls this module if we need a private endpoint attached to the storage account
 module "private_endpoint" {
