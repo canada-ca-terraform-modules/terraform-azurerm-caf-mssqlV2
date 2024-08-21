@@ -12,6 +12,8 @@ module "storage_account" {
     resource_group            = var.mssql.resource_group
     account_tier              = "Standard"
     account_replication_type  = "GRS"
+    public_network_access_enabled = try(var.mssql.storage_account_public_access_enabled, false)
+    shared_access_key_enabled = true
     private_endpoint = {
       "mssqllogs" = {                       
         resource_group    = var.mssql.resource_group

@@ -134,9 +134,9 @@ resource "azurerm_mssql_virtual_network_rule" "test" {
 }
 
 resource "azurerm_mssql_server_extended_auditing_policy" "mssql_server_audit_policy" {
-  count = try(var.mssql.auditing_policy_enabled, true) ? 1 : 0
+  count = try(var.mssql.extended_auditing_policy.enabled, false) ? 1 : 0
   server_id                               = azurerm_mssql_server.mssql_sever.id
-  enabled                                 = try(var.mssql.extended_auditing_policy.enabled, true)
+  enabled                                 = try(var.mssql.extended_auditing_policy.enabled, false)
   storage_endpoint                        = try(var.mssql.extended_auditing_policy.storage_endpoint, false) != false ? var.mssql.extended_auditing_policy.storage_endpoint : module.storage_account[0].storage-account-object.primary_blob_endpoint
   storage_account_access_key              = try(var.mssql.extended_auditing_policy.storage_account_access_key, false) != false ? var.mssql.extended_auditing_policy.storage_account_access_key : null
   storage_account_access_key_is_secondary = try(var.mssql.extended_auditing_policy.storage_account_access_key_is_secondary, false)
@@ -145,15 +145,13 @@ resource "azurerm_mssql_server_extended_auditing_policy" "mssql_server_audit_pol
 }
 
 resource "azurerm_mssql_server_security_alert_policy" "mssql_server_security_alert_policy" {
-  count = try(var.mssql.server_security_alert_policy_enabled, false) ? 1 : 0
+  count = try(var.mssql.server_security_alert_policy_enabled, false) != false ? 1 : 0
   resource_group_name = local.resource_group_name
   server_name = azurerm_mssql_server.mssql_sever.name
   state = try(var.mssql.server_security_alert_policy.state, "Enabled")
   email_account_admins = try(var.mssql.server_security_alert_policy.email_account_admins, false)
   email_addresses = try(var.mssql.server_security_alert_policy.email_addresses, null)
   retention_days = try(var.mssql.server_security_alert_policy.retention_days, 30)
-  storage_endpoint = module.storage_account[0].storage-account-object.primary_blob_endpoint
-  storage_account_access_key = module.storage_account[0].storage-account-object.primary_access_key
   disabled_alerts = try(var.mssql.server_security_alert_policy.disabled_alerts, ["Data_Exfiltration"])
 }
 
