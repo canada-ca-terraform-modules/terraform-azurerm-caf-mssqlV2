@@ -19,7 +19,7 @@ No requirements.
 | location                | (Required) specifies the Azure location where the resource exists | `string`      | `"canadacentral"` |    no    |
 | project                 | (Required) Project name                                           | `string`      | n/a               |   yes    |
 | resource\_groups        | (Required) Resource group object for the MSSQL server             | `any`         | n/a               |   yes    |
-| mssql                   | MSSQL object containing all paramaters                            | `any`         | `{}`              |    no    |
+| mssql                   | MSSQL object containing all parameters                            | `any`         | `{}`              |    no    |
 | private\_dns\_zone\_ids | Object containing private DNS zone IDs for the target project     | `any`         | `{}`              |    no    |
 | subnets                 | Object containing subnet objects of the target project            | `any`         | `{}`              |    no    |
 | tags                    | Tags for the resources                                            | `map(string)` | `{}`              |    no    |
@@ -36,9 +36,9 @@ No requirements.
 
 The administrator user can be configured to be either a local user or a EntraID user or both. The password for this admin user follows these rules:
 
-- A generated password by terraform wil be used IF RBAC authorization is enabled on the subscription keyvault AND the server is configured to not only used entraID authentication AND password_overwrite it set to false
-- A user chosen password, corresponding to a local admin user, will be used IF the server is configured to not only use entraID authentication AND RBAC authorization is disabled on the subscription keyvault OR password_overwrite is set to true
-- No password is required IF the server is configured to only use entraID authorization, then the password for the admin user will be the password of the account configure
+- A generated password by terraform wil be used IF RBAC authorization is enabled on the subscription keyvault AND the server is configured to not only use entraID authentication AND password_overwrite it set to false
+- A user chosen password, corresponding to a local admin user, will be used IF RBAC authorization is disabled on the subscription keyvault AND the server is configured to not only use entraID OR password_overwrite is set to true
+- No password is required IF the server is configured to only use entraID authorization, then the password for the admin user will be the password of the account configured
 
 ## Parameters
 
