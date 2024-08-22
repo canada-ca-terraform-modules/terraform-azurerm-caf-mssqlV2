@@ -2,7 +2,7 @@ resource "azurerm_mssql_server" "mssql_sever" {
   name                = local.mssql_server_name
   resource_group_name = local.resource_group_name
   location            = var.location
-  version             = var.mssql.version
+  version             = try(var.mssql.version, "12.0")
 
   # Optional parameters
   administrator_login                  = try(var.mssql.azuread_administrator.azuread_authentication_only, false) == false ? var.mssql.administrator_login : null
@@ -51,27 +51,27 @@ resource "azurerm_mssql_database" "mssql_db" {
   creation_source_database_id                                = try(each.value.creation_source_database_id, null)
   collation                                                  = try(each.value.collation, null)
   elastic_pool_id                                            = try(each.value.elastic_pool_id, null)
-  # enclave_type                                               = try(each.value.enclave_type, "Default")
+  enclave_type                                               = try(each.value.enclave_type, "Default")
   geo_backup_enabled                                         = try(each.value.geo_backup_enabled, true)
   maintenance_configuration_name                             = try(each.value.maintenance_configuration_name, "SQL_Default")
-  ledger_enabled                                             = try(each.value.ledger_enabled, false)
+  ledger_enabled                                             = try(each.value.ledger_enabled, true)
   license_type                                               = try(each.value.license_type, "BasePrice")
   max_size_gb                                                = try(each.value.max_size_gb, null)
   min_capacity                                               = try(each.value.min_capacity, null)
   restore_point_in_time                                      = try(each.value.restore_point_in_time, null)
-  # recovery_point_id                                          = try(each.value.recovery_point_id, null)
+  recovery_point_id                                          = try(each.value.recovery_point_id, null)
   restore_dropped_database_id                                = try(each.value.restore_dropped_database_id, null)
-  # restore_long_term_retention_backup_id                      = try(each.value.restore_long_term_retention_backup_id, null)
+  restore_long_term_retention_backup_id                      = try(each.value.restore_long_term_retention_backup_id, null)
   read_replica_count                                         = try(each.value.read_replica_count, null)
   read_scale                                                 = try(each.value.read_scale, null)
   sample_name                                                = try(each.value.sample_name, null)
   sku_name                                                   = try(each.value.sku_name, "Basic")
   storage_account_type                                       = try(each.value.storage_account_type, "Geo")
   transparent_data_encryption_enabled                        = try(each.value.transparent_data_encryption_enabled, null)
-  # transparent_data_encryption_key_automatic_rotation_enabled = try(each.value.transparent_data_encryption_key_automatic_rotation_enabled, null)
-  # transparent_data_encryption_key_vault_key_id               = try(each.value.transparent_data_encryption_key_vault_key_id, null)
-  zone_redundant                                             = try(each.value.zone_redundant, null)
-  # secondary_type                                             = try(each.value.secondary_type, null)
+  transparent_data_encryption_key_automatic_rotation_enabled = try(each.value.transparent_data_encryption_key_automatic_rotation_enabled, null)
+  transparent_data_encryption_key_vault_key_id               = try(each.value.transparent_data_encryption_key_vault_key_id, null)
+  zone_redundant                                             = try(each.value.zone_redundant, true)
+  secondary_type                                             = try(each.value.secondary_type, null)
 
   tags = merge(var.tags, try(each.value.tags, {}))
 
@@ -103,7 +103,7 @@ resource "azurerm_mssql_database" "mssql_db" {
       monthly_retention         = try(each.value.long_term_retention_policy.monthly_retention, "P1Y")
       yearly_retention          = try(each.value.long_term_retention_policy.yearly_retention, "P1Y")
       week_of_year              = try(each.value.long_term_retention_policy.week_of_year, 1)
-      # immutable_backups_enabled = try(each.value.long_term_retention_policy.immutable_backups_enabled, false)
+      immutable_backups_enabled = try(each.value.long_term_retention_policy.immutable_backups_enabled, false)
     }
   }
 
@@ -133,29 +133,31 @@ resource "azurerm_mssql_virtual_network_rule" "test" {
   ignore_missing_vnet_service_endpoint = try(each.value.ignore_missing_vnet_service_endpoint, false)
 }
 
+# Sets auditing policy for the server. By default, it will log to the storage account created with the server
 resource "azurerm_mssql_server_extended_auditing_policy" "mssql_server_audit_policy" {
   count = try(var.mssql.extended_auditing_policy.enabled, false) ? 1 : 0
   server_id                               = azurerm_mssql_server.mssql_sever.id
-  enabled                                 = try(var.mssql.extended_auditing_policy.enabled, false)
+  enabled                                 = try(var.mssql.extended_auditing_policy.enabled, true)
   storage_endpoint                        = try(var.mssql.extended_auditing_policy.storage_endpoint, false) != false ? var.mssql.extended_auditing_policy.storage_endpoint : module.storage_account[0].storage-account-object.primary_blob_endpoint
   storage_account_access_key              = try(var.mssql.extended_auditing_policy.storage_account_access_key, false) != false ? var.mssql.extended_auditing_policy.storage_account_access_key : null
   storage_account_access_key_is_secondary = try(var.mssql.extended_auditing_policy.storage_account_access_key_is_secondary, false)
-  retention_in_days                       = try(var.mssql.extended_auditing_policy.retention_in_days, 6)
+  retention_in_days                       = try(var.mssql.extended_auditing_policy.retention_in_days, 90)
   log_monitoring_enabled                  = try(var.mssql.extended_auditing_policy.log_monitoring_enabled, true)
 }
 
+# Sets an alert that will contact admins if triggered. By default it is turned off
 resource "azurerm_mssql_server_security_alert_policy" "mssql_server_security_alert_policy" {
-  count = try(var.mssql.server_security_alert_policy_enabled, false) != false ? 1 : 0
+  count = try(var.mssql.server_security_alert_policy.state, "Disabled") != "Disabled" ? 1 : 0
   resource_group_name = local.resource_group_name
   server_name = azurerm_mssql_server.mssql_sever.name
-  state = try(var.mssql.server_security_alert_policy.state, "Enabled")
+  state = try(var.mssql.server_security_alert_policy.state, "Disabled")
   email_account_admins = try(var.mssql.server_security_alert_policy.email_account_admins, false)
   email_addresses = try(var.mssql.server_security_alert_policy.email_addresses, null)
   retention_days = try(var.mssql.server_security_alert_policy.retention_days, 30)
   disabled_alerts = try(var.mssql.server_security_alert_policy.disabled_alerts, ["Data_Exfiltration"])
 }
 
-# Calls this module if we need a private endpoint attached to the storage account
+# Calls this module if we need a private endpoint attached to the SQL server
 module "private_endpoint" {
   source   = "github.com/canada-ca-terraform-modules/terraform-azurerm-caf-private_endpoint.git?ref=v1.0.1"
   for_each = try(var.mssql.private_endpoint, {})

@@ -1,3 +1,4 @@
+# This module is used to create a storage account used for logging purposes. By default it is enabled
 module "storage_account" {
   source = "github.com/canada-ca-terraform-modules/terraform-azurerm-caf-storage_accountV2.git?ref=v1.0.2"
   count = try(var.mssql.logging_storage_account_enabled, true) ? 1 : 0
@@ -12,8 +13,6 @@ module "storage_account" {
     resource_group            = var.mssql.resource_group
     account_tier              = "Standard"
     account_replication_type  = "GRS"
-    public_network_access_enabled = try(var.mssql.storage_account_public_access_enabled, false)
-    shared_access_key_enabled = true
     private_endpoint = {
       "mssqllogs" = {                       
         resource_group    = var.mssql.resource_group
@@ -22,8 +21,10 @@ module "storage_account" {
       }
     }
   }
+
 }
 
+# For the SQL server to write logs to the storage account, it needs the right role to write to the container
 resource "azurerm_role_assignment" "sql_contributor" {
   count = try(var.mssql.logging_storage_account_enabled, true) ? 1 : 0
   scope = module.storage_account[0].id
