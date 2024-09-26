@@ -103,7 +103,7 @@ resource "azurerm_mssql_database" "mssql_db" {
       monthly_retention         = try(each.value.long_term_retention_policy.monthly_retention, "P1Y")
       yearly_retention          = try(each.value.long_term_retention_policy.yearly_retention, "P1Y")
       week_of_year              = try(each.value.long_term_retention_policy.week_of_year, 1)
-      immutable_backups_enabled = try(each.value.long_term_retention_policy.immutable_backups_enabled, false)
+      # immutable_backups_enabled = try(each.value.long_term_retention_policy.immutable_backups_enabled, false)
     }
   }
 

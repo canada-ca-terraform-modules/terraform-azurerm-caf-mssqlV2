@@ -139,3 +139,9 @@ By default, this resource is NOT deployed with the database. Omitting the block 
 | subnet            | Name of the subnet (OZ,MAZ,PAZ) or subnet ID                                                        | n/a     | yes      |
 | subresource_names | name of the resource the PE will be connected to. For SQL databases, this value should be sqlServer | n/a     | yes      |
 | local_dns_zone    | Name or ID of a private DNS zone                                                                    | n/a     | no       |
+
+### Key vault
+| Name                | Possible Values | Default | Required |
+| ------------------- | --------------- | ------- | -------- |
+| name                | name or ID      | n/a     | no       |
+| resource_group_name | name or ID      | n/a     | no       |

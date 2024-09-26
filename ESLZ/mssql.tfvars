@@ -1,12 +1,11 @@
 SQL_Server = {
-  "server" = {                   # Key defines the UserDefinedString
+  "server" = {                 # Key defines the UserDefinedString
     resource_group = "Project" # Required: Can be the name or ID of the resource group                            
     version        = "12.0"    # Required: 2.0 for v11 or 12.0 for v12
     subnet         = "OZ"      # Required: Can be the name or the ID of a subnet  
     # logging_storage_account_enabled = true                 # Optional: Set to false if you don't want to create a storage account for logging purposes                                    
 
     administrator_login = "maxime.mahdavian" # Optional: This sets a local admin account with this username                   
-    # password_overwrite = true                              # Optional: Set this value to true if you absolutely want to set the admin password below
     # administrator_login_password = "Canada123!"            # Optional: Set the password of the local admin account. See documentation for rules about the password
 
     # Uncomment any of the values in this block to set them explicitly
@@ -70,10 +69,16 @@ SQL_Server = {
       }
     }
 
+    # Optional: Set a keyvault where the admin password will be stored. Defaults to project subscription
+    # key_vault = {
+    #   name = ""
+    #   resource_group_name = ""
+    # }
+
     # Required: This block configures SQL databases. Can configure more than one DB at a time
     # NOTE: Multiple options in this database require azurerm 3.116.0 You need to upgrade the version if it's older
     database = {
-      "database" = {                                   # Key defines the userDefinedString                                                                     
+      "database" = {                                 # Key defines the userDefinedString                                                                     
         collation   = "SQL_Latin1_General_CP1_CI_AS" # 
         max_size_gb = 10
         read_scale  = false

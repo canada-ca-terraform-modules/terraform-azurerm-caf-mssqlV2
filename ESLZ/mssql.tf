@@ -5,7 +5,7 @@ variable "SQL_Server" {
 }
 
 module "mssql" {
-  source = "github.com/canada-ca-terraform-modules/terraform-azurerm-caf-mssqlV2.git?ref=v1.0.0"
+  source = "github.com/canada-ca-terraform-modules/terraform-azurerm-caf-mssqlV2.git?ref=v1.0.1"
   for_each = var.SQL_Server
 
   userDefinedString = each.key 
