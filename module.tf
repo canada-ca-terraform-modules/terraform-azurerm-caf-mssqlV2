@@ -34,7 +34,7 @@ resource "azurerm_mssql_server" "mssql_sever" {
   tags = merge(var.tags, try(var.mssql.tags, {}))
 
   lifecycle {
-    ignore_changes = [identity, tags, ]
+    ignore_changes = [identity, ]
   }
 }
 
@@ -105,11 +105,6 @@ resource "azurerm_mssql_database" "mssql_db" {
       week_of_year              = try(each.value.long_term_retention_policy.week_of_year, 1)
       # immutable_backups_enabled = try(each.value.long_term_retention_policy.immutable_backups_enabled, false)
     }
-  }
-
-
-  lifecycle {
-    ignore_changes = [tags, ]
   }
 }
 
