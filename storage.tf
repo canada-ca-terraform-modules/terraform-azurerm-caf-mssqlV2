@@ -1,7 +1,7 @@
 # This module is used to create a storage account used for logging purposes. By default it is enabled
 module "storage_account" {
-  # source = "github.com/canada-ca-terraform-modules/terraform-azurerm-caf-storage_accountV2.git?ref=v1.0.2"
-  source = "/home/max/devops/modules/terraform-azurerm-caf-storage_accountV2"
+  source = "github.com/canada-ca-terraform-modules/terraform-azurerm-caf-storage_accountV2.git?ref=v1.0.3"
+  # source = "/home/max/devops/modules/terraform-azurerm-caf-storage_accountV2"
   count = try(var.mssql.logging_storage_account_enabled, true) ? 1 : 0
   userDefinedString    = "${var.userDefinedString}-logs"
   location             = var.location
