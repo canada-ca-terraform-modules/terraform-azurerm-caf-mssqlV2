@@ -7,5 +7,5 @@ locals {
   # Generated password if   ->  azuread_authentication_only = false AND RBAC authorization is enabled on the subscription keyvault AND password_overwrite = false
   # User chosen password if ->  azuread_authentication_only = false AND RBAC authorization is disabled on the subscription keyvault OR password_overwrite = true
   # No password required if ->  azuread_authentication_only = true
-  sql-admin-password = try(var.mssql.azuread_administrator.azuread_authentication_only, false) ?  null : try(data.azurerm_key_vault.key_vault[0].enable_rbac_authorization, false) ? random_password.sql-admin-password[0].result : var.mssql.administrator_login_password
+  sql-admin-password = try(var.mssql.azuread_administrator.azuread_authentication_only, false) ?  null : try(data.azurerm_key_vault.key_vault[0].rbac_authorization_enabled, false) ? random_password.sql-admin-password[0].result : var.mssql.administrator_login_password
 }
