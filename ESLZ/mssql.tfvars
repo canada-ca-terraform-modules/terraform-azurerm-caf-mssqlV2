@@ -14,6 +14,7 @@ SQL_Server = {
     # public_network_access_enabled = false
     # outbound_network_restriction_enabled = false
 
+    # express_vulnerability_assessment_enabled = true  # Optional: Enables express vulnerability assessment on the server. Default: false
 
     # Optional: Set this block if you want to set the admin user with a entraID account
     # azuread_administrator = {

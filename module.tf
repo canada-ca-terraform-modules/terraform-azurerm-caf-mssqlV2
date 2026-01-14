@@ -11,7 +11,7 @@ resource "azurerm_mssql_server" "mssql_sever" {
   minimum_tls_version                  = try(var.mssql.minimum_tls_version, "1.2")
   public_network_access_enabled        = try(var.mssql.public_network_access_enabled, false)
   outbound_network_restriction_enabled = try(var.mssql.outbound_network_restriction_enabled, false)
-
+ 
   # azuread_administrator is optional
   dynamic "azuread_administrator" {
     for_each = try(var.mssql.azuread_administrator, false) != false ? [1] : []
@@ -36,6 +36,7 @@ resource "azurerm_mssql_server" "mssql_sever" {
   lifecycle {
     ignore_changes = [identity, ]
   }
+  express_vulnerability_assessment_enabled = try(var.mssql.express_vulnerability_assessment_enabled, false)
 }
 
 resource "azurerm_mssql_database" "mssql_db" {
@@ -166,3 +167,4 @@ module "private_endpoint" {
   private_dns_zone_ids           = var.private_dns_zone_ids
   tags                           = var.tags
 }
+

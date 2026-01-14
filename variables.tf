@@ -30,7 +30,20 @@ variable "resource_groups" {
 }
 
 variable "mssql" {
-  description = "MSSQL object containing all paramaters"
+  description = <<EOT
+MSSQL object containing all parameters. Supported properties include (but are not limited to):
+  - version
+  - administrator_login
+  - administrator_login_password
+  - connection_policy
+  - minimum_tls_version
+  - public_network_access_enabled
+  - outbound_network_restriction_enabled
+  - azuread_administrator
+  - identity
+  - tags
+  - express_vulnerability_assessment_enabled (bool, optional): Enables express vulnerability assessment on the server. Default: false
+EOT
   type = any
   default = {}
 }
