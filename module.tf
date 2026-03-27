@@ -182,7 +182,7 @@ resource "azurerm_mssql_server_security_alert_policy" "mssql_server_security_ale
 
 # Calls this module if we need a private endpoint attached to the SQL server
 module "private_endpoint" {
-  source   = "github.com/canada-ca-terraform-modules/terraform-azurerm-caf-private_endpoint.git?ref=v1.0.2"
+  source   = "github.com/canada-ca-terraform-modules/terraform-azurerm-caf-private_endpoint.git?ref=v1.1.0"
   for_each = try(var.mssql.private_endpoint, {})
 
   name                           = "${local.mssql_server_name}-${each.key}"
