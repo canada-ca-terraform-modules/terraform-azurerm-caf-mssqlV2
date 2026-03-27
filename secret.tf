@@ -12,10 +12,10 @@ locals {
 
 # Need to get info about the subscription key vault. If password_overwrite is true, then don't bother since we  won't use it
 data "azurerm_key_vault" "key_vault" {
-  count = try(var.mssql.administrator_login_password, null) == null && !try(var.mssql.azuread_administrator.azuread_authentication_only, false) ? 1 : 0 
-  name = try(var.mssql.key_vault.name, local.kv_name)
+  count               = try(var.mssql.administrator_login_password, null) == null && !try(var.mssql.azuread_administrator.azuread_authentication_only, false) ? 1 : 0
+  name                = try(var.mssql.key_vault.name, local.kv_name)
   resource_group_name = strcontains(local.kv_resource_group_name, "/resourceGroups/") ? regex("[^\\/]+$", local.kv_resource_group_name) : var.resource_groups[local.kv_resource_group_name].name
-} 
+}
 
 # Generate a password if it will be necessary (see locals.tf file). Since it it only an inital password, ignore all changes to it
 resource "random_password" "sql-admin-password" {

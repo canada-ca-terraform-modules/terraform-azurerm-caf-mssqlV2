@@ -1,0 +1,38 @@
+name: terraform-ci
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - uses: hashicorp/setup-terraform@v4.0.0
+
+      - name: terraform fmt
+        run: terraform fmt -check -recursive
+
+      - name: terraform init
+        run: terraform init -backend=false
+
+      - name: terraform validate
+        run: terraform validate
+
+      - name: terraform test
+        run: terraform test
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - uses: reviewdog/action-tflint@v1.25.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          tflint_init: true
+          flags: --recursive

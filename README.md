@@ -1,13 +1,22 @@
+# terraform-azurerm-caf-mssqlV2
+
+Deploys an Azure SQL Server (MSSQL) with optional databases, auditing policy, security alert policy, firewall/VNet rules, private endpoint, and a dedicated logging storage account. Requires azurerm `~> 4.0`.
+
+<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
-No requirements.
+| Name | Version |
+|------|---------|
+| terraform | >= 1.9 |
+| azurerm | ~> 4.0 |
+| random | ~> 3.0 |
 
 ## Providers
 
-| Name    | Version |
-| ------- | ------- |
-| azurerm | 3.116   |
-| random  | n/a     |
+| Name | Version |
+|------|---------|
+| azurerm | ~> 4.0 |
+| random | ~> 3.0 |
 
 ## Inputs
 
@@ -26,11 +35,11 @@ No requirements.
 
 ## Outputs
 
-| Name                | Description         |
-| ------------------- | ------------------- |
-| mssql\_server       | MSSQL server object |
-| mssql\_server\_id   | MSSQL server ID     |
-| mssql\_server\_name | MSSQL server name   |
+| Name                | Description         | Sensitive |
+| ------------------- | ------------------- | :-------: |
+| mssql\_server       | MSSQL server object | yes       |
+| mssql\_server\_id   | MSSQL server ID     | no        |
+| mssql\_server\_name | MSSQL server name   | no        |
 
 ## Administrator user
 
@@ -42,21 +51,24 @@ The administrator user can be configured to be either a local user or a EntraID 
 
 ## Parameters
 
-For more information, please refer to the terraform documentation for the resources mentioned below. 
+For more information, please refer to the terraform documentation for the resources mentioned below.
 
 ### SQL Server
-| Name                                 | Possible values                  | Default | Required |
-| ------------------------------------ | -------------------------------- | ------- | :------: |
-| version                              | 2.0 (for V11) and 12.0 (for v12) | 12.0    |    no    |
-| administrator_login                  | string                           | n/a     |    no    |
-| administrator_login_password         | string                           | n/a     |    no    |
-| connection_policy                    | Default,Proxy,Redirect           | Default |    no    |
-| minimum_tls_version                  | 1.0,1.1,1.2,Disabled             | 1.2     |    no    |
-| public_network_access_enabled        | True,false                       | false   |    no    |
-| outbound_network_restriction_enabled | true,false                       | false   |    no    |
-| azuread_administrator                | block                            | n/a     |    no    |
-| identity                             | block                            | n/a     |    no    |
-| tags                                 | string map                       | n/a     |    no    |
+| Name                                          | Possible values                  | Default | Required |
+| --------------------------------------------- | -------------------------------- | ------- | :------: |
+| version                                       | 2.0 (for V11) and 12.0 (for v12) | 12.0    |    no    |
+| administrator_login                           | string                           | n/a     |    no    |
+| administrator_login_password                  | string                           | n/a     |    no    |
+| connection_policy                             | Default,Proxy,Redirect           | Default |    no    |
+| minimum_tls_version                           | 1.0,1.1,1.2,Disabled             | 1.2     |    no    |
+| public_network_access_enabled                 | true,false                       | false   |    no    |
+| outbound_network_restriction_enabled          | true,false                       | false   |    no    |
+| primary_user_assigned_identity_id             | Azure managed identity ID        | null    |    no    |
+| transparent_data_encryption_key_vault_key_id  | Key Vault key URL (versioned)    | null    |    no    |
+| express_vulnerability_assessment_enabled      | true,false                       | false   |    no    |
+| azuread_administrator                         | block                            | n/a     |    no    |
+| identity                                      | block                            | n/a     |    no    |
+| tags                                          | string map                       | n/a     |    no    |
 
 ### SQL Database
 
@@ -65,6 +77,7 @@ For more information, please refer to the terraform documentation for the resour
 | auto_pause_delay_in_minutes                                | int                                                                  | n/a         | No       |
 | create_mode                                                | See terraform doc                                                    | Default     | No       |
 | creation_source_database_id                                | Azure resource ID                                                    | n/a         | No       |
+| recover_database_id                                        | Azure resource ID (for Recovery create_mode)                         | n/a         | No       |
 | collation                                                  | Valid SQL collation value                                            | n/a         | No       |
 | elastic_pool_id                                            | Azure resource ID                                                    | n/a         | No       |
 | enclave_type                                               | Default,VBS                                                          | Default     | No       |
@@ -87,9 +100,10 @@ For more information, please refer to the terraform documentation for the resour
 | transparent_data_encryption_key_automatic_rotation_enabled | true,false                                                           | n/a         | No       |
 | transparent_data_encryption_key_vault_key_id               | Azure resource ID                                                    | n/a         | No       |
 | zone_redundant                                             | true,false                                                           | true        | No       |
-| secondary_type                                             | Geo,Named                                                            | n/a         | No       |
+| secondary_type                                             | Geo,Named,Standby                                                    | n/a         | No       |
+| identity                                                   | block (type=UserAssigned + identity_ids required)                    | n/a         | No       |
+| threat_detection_policy                                    | block                                                                | n/a         | No       |
 | tags                                                       | string map                                                           | n/a         | no       |
-
 
 ### Firewall rules
 | Name             | Possible Values | Default | Required |
@@ -116,19 +130,21 @@ By default this resource is deployed with the database. Omitting the block disab
 | storage_account_access_key_is_secondary | true,false                                                                                | false                              | no       |
 | retention_in_days                       | int                                                                                       | 90                                 | no       |
 | log_monitoring_enabled                  | true,false                                                                                | true                               | no       |
+| storage_account_subscription_id         | Subscription UUID of the storage account                                                  | null                               | no       |
+| predicate_expression                    | WHERE clause expression for audit filtering                                               | null                               | no       |
+| audit_actions_and_groups                | list of audit action/group names                                                          | null                               | no       |
 
-### Security Alert policy 
+### Security Alert policy
 
 By default, this resource is NOT deployed with the database. Omitting the block disables the feature.
 
-| Name                                    | Possible Values                                                                                              | Default  | Required |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------------------ | -------- | -------- |
-| state                                   | Enabled,Disabled,New                                                                                         | Disabled | no       |
-| email_account_admins                    | true,false                                                                                                   | false    | no       |
-| email_addresses                         | List of email addresses                                                                                      | null     | no       |
-| storage_account_access_key_is_secondary | true,false                                                                                                   | false    | no       |
-| retention_days                          | int                                                                                                          | 30       | no       |
-| disabled_alerts                         | Array composed of: Sql_injection,Sql_Injection_Vulnerability, Access_Anomaly,Data_Exfiltration,Unsafe_Action | true     | no       |
+| Name                | Possible Values                                                                                              | Default  | Required |
+| ------------------- | ------------------------------------------------------------------------------------------------------------ | -------- | -------- |
+| state               | Enabled,Disabled                                                                                             | Disabled | no       |
+| email_account_admins | true,false                                                                                                  | false    | no       |
+| email_addresses     | List of email addresses                                                                                      | null     | no       |
+| retention_days      | int                                                                                                          | 30       | no       |
+| disabled_alerts     | Array composed of: Sql_Injection,Sql_Injection_Vulnerability, Access_Anomaly,Data_Exfiltration,Unsafe_Action | []       | no       |
 
 ### Private endpoint
 
@@ -145,3 +161,5 @@ By default, this resource is NOT deployed with the database. Omitting the block 
 | ------------------- | --------------- | ------- | -------- |
 | name                | name or ID      | n/a     | no       |
 | resource_group_name | name or ID      | n/a     | no       |
+<!-- END_TF_DOCS -->
+

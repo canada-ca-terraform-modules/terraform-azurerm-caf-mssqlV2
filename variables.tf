@@ -1,32 +1,32 @@
 variable "env" {
   description = "(Required) Environment for the MSSQL server"
-  type = string
+  type        = string
 }
 
 variable "group" {
   description = "(Required) Group for the project"
-  type = string
+  type        = string
 }
 
 variable "project" {
   description = "(Required) Project name"
-  type = string
+  type        = string
 }
 
 variable "userDefinedString" {
   description = "(Required) UserDefinedString for the mssql server"
-  type = string
+  type        = string
 }
 
 variable "location" {
   description = "(Required) specifies the Azure location where the resource exists"
-  type = string
-  default = "canadacentral"
+  type        = string
+  default     = "canadacentral"
 }
 
 variable "resource_groups" {
-    description = "(Required) Resource group object for the MSSQL server"
-    type = any  
+  description = "(Required) Resource group object for the MSSQL server"
+  type        = any
 }
 
 variable "mssql" {
@@ -44,25 +44,25 @@ MSSQL object containing all parameters. Supported properties include (but are no
   - tags
   - express_vulnerability_assessment_enabled (bool, optional): Enables express vulnerability assessment on the server. Default: false
 EOT
-  type = any
-  default = {}
+  type        = any
+  default     = {}
 }
 
 variable "subnets" {
   description = "Object containing subnet objects of the target project"
-  type = any
-  default = {}
+  type        = any
+  default     = {}
 }
 
 variable "private_dns_zone_ids" {
   description = "Object containing private DNS zone IDs for the target project"
-  type = any
-  default = {}
+  type        = any
+  default     = {}
 }
 
 variable "tags" {
   description = "Tags for the resources"
-  type = map(string)
-  default = {}
+  type        = map(string)
+  default     = {}
 }
 

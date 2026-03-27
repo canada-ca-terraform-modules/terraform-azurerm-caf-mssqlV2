@@ -44,6 +44,9 @@ SQL_Server = {
       enabled                = true
       retention_in_days      = 90
       log_monitoring_enabled = true
+      # storage_account_subscription_id = "00000000-0000-0000-0000-000000000000"  # Optional: subscription ID of the auditing storage account
+      # predicate_expression            = "object_name = 'SensitiveTable'"         # Optional: WHERE clause to filter audit events
+      # audit_actions_and_groups        = ["SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP", "FAILED_DATABASE_AUTHENTICATION_GROUP"]  # Optional
     }
 
     # Optional, uncomment this if you want to set alert policies
@@ -75,6 +78,12 @@ SQL_Server = {
     #   name = ""
     #   resource_group_name = ""
     # }
+
+    # Optional: Set a customer-managed key (CMK) for Transparent Data Encryption on the server
+    # transparent_data_encryption_key_vault_key_id = "https://<vault>.vault.azure.net/keys/<key>/<version>"
+
+    # Optional: Required when identity.type includes "UserAssigned" — set the primary managed identity
+    # primary_user_assigned_identity_id = "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.ManagedIdentity/userAssignedIdentities/<name>"
 
     # Required: This block configures SQL databases. Can configure more than one DB at a time
     # NOTE: Multiple options in this database require azurerm 3.116.0 You need to upgrade the version if it's older
@@ -119,7 +128,22 @@ SQL_Server = {
           monthly_retention = "P1Y"
           yearly_retention  = "P1Y"
           week_of_year      = 1
+          # immutable_backups_enabled = true   # Optional: lock backups against deletion/modification
         }
+
+        # Optional: per-database threat detection policy (distinct from server-level security alert policy)
+        # threat_detection_policy = {
+        #   state                      = "Enabled"
+        #   email_account_admins       = false
+        #   email_addresses            = ["dba@example.com"]
+        #   retention_days             = 30
+        # }
+
+        # Optional: per-database user-assigned managed identity for CMK TDE
+        # identity = {
+        #   type         = "UserAssigned"
+        #   identity_ids = ["/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.ManagedIdentity/userAssignedIdentities/<name>"]
+        # }
       }
     }
   }
