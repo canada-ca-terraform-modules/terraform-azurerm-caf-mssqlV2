@@ -115,7 +115,7 @@ SQL_Server = {
         # transparent_data_encryption_enabled = null
         # transparent_data_encryption_key_automatic_rotation_enabled = null
         # transparent_data_encryption_key_vault_key_id = ""
-        # zone_redundant = true
+        zone_redundant = false
         # secondary_type = null
 
         short_term_retention_policy = {
