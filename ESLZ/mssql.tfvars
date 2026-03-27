@@ -50,7 +50,7 @@ SQL_Server = {
     }
 
     # Optional, uncomment this if you want to set alert policies
-    # sever_security_alert_policy = {
+    # server_security_alert_policy = {
     #   state = "Enabled"
     #   email_account_admins = false
     #   email_addresses = [ "firstname.lastname@ssc-spc.gc.ca" ]
