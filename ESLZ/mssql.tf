@@ -20,5 +20,6 @@ module "mssql" {
   resource_groups      = local.resource_groups_all
   mssql                = each.value
   subnets              = local.subnets
-  private_dns_zone_ids = local.Project-dns-zone
+  private_dns_zone_ids = local.private_dns_zone_ids
+  tags                 = var.tags
 }
