@@ -107,7 +107,6 @@ resource "azurerm_mssql_database" "mssql_db" {
       monthly_retention         = try(each.value.long_term_retention_policy.monthly_retention, "P1Y")
       yearly_retention          = try(each.value.long_term_retention_policy.yearly_retention, "P1Y")
       week_of_year              = try(each.value.long_term_retention_policy.week_of_year, 1)
-      immutable_backups_enabled = try(each.value.long_term_retention_policy.immutable_backups_enabled, false)
     }
   }
 
@@ -124,11 +123,11 @@ resource "azurerm_mssql_database" "mssql_db" {
     content {
       state                      = try(each.value.threat_detection_policy.state, "Disabled")
       disabled_alerts            = try(each.value.threat_detection_policy.disabled_alerts, [])
-      email_account_admins       = try(each.value.threat_detection_policy.email_account_admins, false)
+      email_account_admins_enabled = try(each.value.threat_detection_policy.email_account_admins_enabled, each.value.threat_detection_policy.email_account_admins, false)
       email_addresses            = try(each.value.threat_detection_policy.email_addresses, [])
       retention_days             = try(each.value.threat_detection_policy.retention_days, null)
       storage_account_access_key = try(each.value.threat_detection_policy.storage_account_access_key, null)
-      storage_endpoint           = try(each.value.threat_detection_policy.storage_endpoint, null)
+      storage_endpoint           = try(each.value.threat_detection_policy.blob_storage_endpoint, null)
     }
   }
 }
@@ -158,7 +157,7 @@ resource "azurerm_mssql_server_extended_auditing_policy" "mssql_server_audit_pol
   count                                   = try(var.mssql.extended_auditing_policy.enabled, false) ? 1 : 0
   server_id                               = azurerm_mssql_server.mssql_sever.id
   enabled                                 = try(var.mssql.extended_auditing_policy.enabled, true)
-  storage_endpoint                        = try(var.mssql.extended_auditing_policy.storage_endpoint, false) != false ? var.mssql.extended_auditing_policy.storage_endpoint : module.storage_account[0].storage-account-object.primary_blob_endpoint
+  blob_storage_endpoint                   = try(var.mssql.extended_auditing_policy.blob_storage_endpoint, var.mssql.extended_auditing_policy.storage_endpoint, module.storage_account[0].storage-account-object.primary_blob_endpoint, null)
   storage_account_access_key              = try(var.mssql.extended_auditing_policy.storage_account_access_key, false) != false ? var.mssql.extended_auditing_policy.storage_account_access_key : null
   storage_account_access_key_is_secondary = try(var.mssql.extended_auditing_policy.storage_account_access_key_is_secondary, false)
   retention_in_days                       = try(var.mssql.extended_auditing_policy.retention_in_days, 90)
@@ -174,7 +173,7 @@ resource "azurerm_mssql_server_security_alert_policy" "mssql_server_security_ale
   resource_group_name  = local.resource_group_name
   server_name          = azurerm_mssql_server.mssql_sever.name
   state                = try(var.mssql.server_security_alert_policy.state, "Disabled")
-  email_account_admins = try(var.mssql.server_security_alert_policy.email_account_admins, false)
+  email_account_admins_enabled = try(var.mssql.server_security_alert_policy.email_account_admins_enabled, var.mssql.server_security_alert_policy.email_account_admins, false)
   email_addresses      = try(var.mssql.server_security_alert_policy.email_addresses, null)
   retention_days       = try(var.mssql.server_security_alert_policy.retention_days, 30)
   disabled_alerts      = try(var.mssql.server_security_alert_policy.disabled_alerts, ["Data_Exfiltration"])
@@ -182,7 +181,7 @@ resource "azurerm_mssql_server_security_alert_policy" "mssql_server_security_ale
 
 # Calls this module if we need a private endpoint attached to the SQL server
 module "private_endpoint" {
-  source   = "github.com/canada-ca-terraform-modules/terraform-azurerm-caf-private_endpoint.git?ref=v1.1.0"
+  source   = "github.com/canada-ca-terraform-modules/terraform-azurerm-caf-private_endpoint.git?ref=v1.2.0"
   for_each = try(var.mssql.private_endpoint, {})
 
   name                           = "${local.mssql_server_name}-${each.key}"

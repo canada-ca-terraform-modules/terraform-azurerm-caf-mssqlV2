@@ -52,7 +52,7 @@ SQL_Server = {
     # Optional, uncomment this if you want to set alert policies
     # server_security_alert_policy = {
     #   state = "Enabled"
-    #   email_account_admins = false
+    #   email_account_admins_enabled = false
     #   email_addresses = [ "firstname.lastname@ssc-spc.gc.ca" ]
     #   retention_days = 30
     #   disabled_alerts = ["Data_Exfiltration"]
@@ -133,10 +133,10 @@ SQL_Server = {
 
         # Optional: per-database threat detection policy (distinct from server-level security alert policy)
         # threat_detection_policy = {
-        #   state                      = "Enabled"
-        #   email_account_admins       = false
-        #   email_addresses            = ["dba@example.com"]
-        #   retention_days             = 30
+        #   state                        = "Enabled"
+        #   email_account_admins_enabled = false
+        #   email_addresses              = ["dba@example.com"]
+        #   retention_days               = 30
         # }
 
         # Optional: per-database user-assigned managed identity for CMK TDE
